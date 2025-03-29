@@ -1,0 +1,34 @@
+[
+    {
+        "model_name": "playlist_recommender_fast_0.005.pt",
+        "learning_rate": 0.005,
+        "accuracy": 0,
+        "correct": 0,
+        "total": 0,
+        "eval_time": 0.00029921531677246094
+    },
+    {
+        "model_name": "playlist_recommender_fast_0.01.pt",
+        "learning_rate": 0.01,
+        "accuracy": 0,
+        "correct": 0,
+        "total": 0,
+        "eval_time": 0.00026035308837890625
+    },
+    {
+        "model_name": "playlist_recommender_fast_0.001.pt",
+        "learning_rate": 0.001,
+        "accuracy": 0,
+        "correct": 0,
+        "total": 0,
+        "eval_time": 0.0002663135528564453
+    },
+    {
+        "model_name": "playlist_recommender_fast_5e-05.pt",
+        "learning_rate": 5e-05,
+        "accuracy": 0,
+        "correct": 0,
+        "total": 0,
+        "eval_time": 0.0002651214599609375
+    }
+]

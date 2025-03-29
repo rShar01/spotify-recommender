@@ -1,0 +1,30 @@
+[
+    {
+        "k": 1,
+        "accuracy": 0.958,
+        "total_correct": 2874,
+        "total_predictions": 3000,
+        "eval_time": 24.928548097610474
+    },
+    {
+        "k": 5,
+        "accuracy": 0.9516666666666667,
+        "total_correct": 2855,
+        "total_predictions": 3000,
+        "eval_time": 25.674021005630493
+    },
+    {
+        "k": 10,
+        "accuracy": 0.9556666666666667,
+        "total_correct": 2867,
+        "total_predictions": 3000,
+        "eval_time": 25.605072736740112
+    },
+    {
+        "k": 20,
+        "accuracy": 0.953,
+        "total_correct": 2859,
+        "total_predictions": 3000,
+        "eval_time": 24.820044994354248
+    }
+]
