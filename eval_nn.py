@@ -246,6 +246,173 @@ def create_playlist_song_matrix(data_path: str, pids: np.ndarray, top_songs: Lis
     
     return matrix
 
+def evaluate_model_with_advanced_metrics(
+    model,
+    test_embeddings,
+    train_embeddings,
+    test_pids,
+    train_pids,
+    test_playlist_matrix,
+    train_playlist_matrix,
+    top_songs,
+    max_rows=500,
+    device="cuda" if torch.cuda.is_available() else "cpu"
+):
+    """Enhanced evaluation with better metrics for sparse playlist data"""
+    print(f"Running evaluation on up to {max_rows} test playlists")
+    
+    # Find test playlists with at least one song
+    test_song_counts = np.sum(test_playlist_matrix, axis=1)
+    valid_indices = np.where(test_song_counts > 0)[0]
+    
+    if len(valid_indices) == 0:
+        print("No test playlists with songs found. Cannot evaluate.")
+        return {"error": "No test playlists with songs found."}
+    
+    # Limit to max_rows for speed
+    if len(valid_indices) > max_rows:
+        valid_indices = np.random.choice(valid_indices, max_rows, replace=False)
+    
+    print(f"Evaluating on {len(valid_indices)} test playlists")
+    
+    # Track metrics
+    all_true_labels = []
+    all_predictions = []
+    
+    # Convert embeddings to tensor format
+    test_tensors = torch.FloatTensor(test_embeddings[valid_indices]).to(device)
+    train_tensors = torch.FloatTensor(train_embeddings).to(device)
+    
+    # Process in batches for efficiency
+    batch_size = 32
+    
+    for batch_start in tqdm(range(0, len(valid_indices), batch_size), desc="Evaluating"):
+        batch_end = min(batch_start + batch_size, len(valid_indices))
+        batch_indices = valid_indices[batch_start:batch_end]
+        batch_test_tensors = test_tensors[batch_start:batch_end]
+        
+        # For each test playlist in this batch
+        for i, test_idx in enumerate(range(batch_start, batch_end)):
+            test_idx = valid_indices[test_idx]
+            test_pid = test_pids[test_idx]
+            test_songs = test_playlist_matrix[test_idx]
+            
+            # Create two sets of evaluations:
+            # 1. Mask songs that are in the playlist (1s) - for recall on positives
+            # 2. Mask songs that are not in the playlist (0s) - for specificity
+            
+            # 1. Evaluate on positives (1s)
+            positive_indices = np.where(test_songs > 0)[0]
+            if len(positive_indices) > 0:
+                # Choose one random positive song to mask
+                mask_idx = np.random.choice(positive_indices)
+                true_label = 1  # It's a positive example
+                
+                # Create test tensor
+                test_tensor = batch_test_tensors[i].unsqueeze(0)
+                
+                # Score against all training playlists
+                similarity_scores = []
+                train_batch_size = 128
+                
+                for train_batch_start in range(0, len(train_tensors), train_batch_size):
+                    train_batch_end = min(train_batch_start + train_batch_size, len(train_tensors))
+                    train_batch = train_tensors[train_batch_start:train_batch_end]
+                    
+                    test_tensor_repeated = test_tensor.repeat(len(train_batch), 1)
+                    
+                    with torch.no_grad():
+                        batch_scores = model(test_tensor_repeated, train_batch).cpu().numpy()
+                    
+                    similarity_scores.append(batch_scores)
+                
+                all_scores = np.concatenate(similarity_scores)
+                most_similar_idx = np.argmax(all_scores)
+                
+                # Check prediction
+                prediction = int(train_playlist_matrix[most_similar_idx, mask_idx] > 0)
+                
+                all_true_labels.append(true_label)
+                all_predictions.append(prediction)
+            
+            # 2. Evaluate on negatives (0s)
+            negative_indices = np.where(test_songs == 0)[0]
+            if len(negative_indices) > 0:
+                # Choose one random negative song to mask
+                mask_idx = np.random.choice(negative_indices)
+                true_label = 0  # It's a negative example
+                
+                # Create test tensor
+                test_tensor = batch_test_tensors[i].unsqueeze(0)
+                
+                # Score against all training playlists
+                similarity_scores = []
+                train_batch_size = 128
+                
+                for train_batch_start in range(0, len(train_tensors), train_batch_size):
+                    train_batch_end = min(train_batch_start + train_batch_size, len(train_tensors))
+                    train_batch = train_tensors[train_batch_start:train_batch_end]
+                    
+                    test_tensor_repeated = test_tensor.repeat(len(train_batch), 1)
+                    
+                    with torch.no_grad():
+                        batch_scores = model(test_tensor_repeated, train_batch).cpu().numpy()
+                    
+                    similarity_scores.append(batch_scores)
+                
+                all_scores = np.concatenate(similarity_scores)
+                most_similar_idx = np.argmax(all_scores)
+                
+                # Check prediction
+                prediction = int(train_playlist_matrix[most_similar_idx, mask_idx] > 0)
+                
+                all_true_labels.append(true_label)
+                all_predictions.append(prediction)
+    
+    # Calculate metrics
+    all_true_labels = np.array(all_true_labels)
+    all_predictions = np.array(all_predictions)
+    
+    # Basic metrics
+    accuracy = np.mean(all_true_labels == all_predictions)
+    
+    # Class-specific metrics
+    true_positives = np.sum((all_true_labels == 1) & (all_predictions == 1))
+    false_positives = np.sum((all_true_labels == 0) & (all_predictions == 1))
+    true_negatives = np.sum((all_true_labels == 0) & (all_predictions == 0))
+    false_negatives = np.sum((all_true_labels == 1) & (all_predictions == 0))
+    
+    # Calculate precision, recall, f1
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    
+    # For the negative class (specificity)
+    specificity = true_negatives / (true_negatives + false_positives) if (true_negatives + false_positives) > 0 else 0
+    
+    # Balanced accuracy
+    balanced_acc = (recall + specificity) / 2
+    
+    # Confusion matrix
+    confusion_matrix = {
+        'true_positives': int(true_positives),
+        'false_positives': int(false_positives),
+        'true_negatives': int(true_negatives),
+        'false_negatives': int(false_negatives)
+    }
+    
+    return {
+        'accuracy': float(accuracy),
+        'precision': float(precision),
+        'recall': float(recall),
+        'f1_score': float(f1),
+        'specificity': float(specificity),
+        'balanced_accuracy': float(balanced_acc),
+        'confusion_matrix': confusion_matrix,
+        'total_samples': len(all_true_labels),
+        'positive_samples': int(np.sum(all_true_labels == 1)),
+        'negative_samples': int(np.sum(all_true_labels == 0))
+    }
 
 def evaluate_model_simple(
     model,
@@ -449,7 +616,18 @@ def run_evaluation(
             start_time = time.time()
             
             # Run evaluation
-            results = evaluate_model_simple(
+            # results = evaluate_model_simple(
+            #     model,
+            #     test_embeddings,
+            #     train_embeddings,
+            #     test_pids,
+            #     train_pids,
+            #     test_playlist_matrix,
+            #     train_playlist_matrix,
+            #     top_songs,
+            #     max_rows=max_eval_rows
+            # )
+            results = evaluate_model_with_advanced_metrics(
                 model,
                 test_embeddings,
                 train_embeddings,
@@ -460,6 +638,7 @@ def run_evaluation(
                 top_songs,
                 max_rows=max_eval_rows
             )
+
             
             # Record evaluation time
             eval_time = time.time() - start_time
@@ -471,16 +650,19 @@ def run_evaluation(
                 'embedding_dim': model_data['embedding_dim'],
                 'hidden_dims': model_data.get('hidden_dims', [512, 256]),
                 'train_losses': [float(x) for x in model_data.get('epoch_losses', [])],
-                'accuracy': results['accuracy'],
-                'correct': results['correct'],
-                'total': results['total'],
+                **results,
                 'eval_time': eval_time
             }
             
             all_results.append(model_results)
             
-            # Print summary
-            print(f"  Accuracy: {results['accuracy']:.4f} ({results['correct']}/{results['total']})")
+            # Print summary with enhanced metrics
+            print(f"  Accuracy: {results['accuracy']:.4f}")
+            print(f"  Precision: {results['precision']:.4f}")
+            print(f"  Recall: {results['recall']:.4f}")
+            print(f"  F1 Score: {results['f1_score']:.4f}")
+            print(f"  Balanced Accuracy: {results['balanced_accuracy']:.4f}")
+            print(f"  Confusion Matrix: {results['confusion_matrix']}")
             print(f"  Evaluation time: {eval_time:.2f} seconds")
             
             # Clean up to avoid GPU memory issues
@@ -519,7 +701,7 @@ def main():
     # Configuration
     embedding_store_path = "/data/user_data/rshar/downloads/spotify/playlist_embeddings.h5"
     data_path = "/data/user_data/rshar/downloads/spotify/data"
-    count_song_path = "count_songs.csv"
+    count_song_path = "data/count_songs.csv"
     model_dir = "models"
     
     # Run evaluation with more robust loading
