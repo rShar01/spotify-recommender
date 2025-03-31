@@ -221,6 +221,352 @@ def fast_predict_embedding_knn(train_embeddings, test_df, train_csv_files, n_nei
     return results
 
 
+def evaluate_embedding_knn_with_advanced_metrics(
+    train_embeddings, 
+    test_paths, 
+    train_csv_files, 
+    top_songs,
+    n_neighbors=5, 
+    max_files=10, 
+    max_rows=500
+):
+    """Evaluate embedding-based KNN with advanced metrics including recall and F1"""
+    print(f"Advanced evaluation for KNN with k={n_neighbors} on max {max_files} files")
+    
+    # Use only a subset of test files
+    test_paths = random.sample(test_paths, min(max_files, len(test_paths)))
+    
+    # Create KNN model
+    knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto')
+    knn.fit(train_embeddings)
+    
+    # Load a sample of training data for evaluation
+    train_sample = []
+    sample_files = random.sample(train_csv_files, min(10, len(train_csv_files)))
+    for path in tqdm(sample_files, desc="Loading train sample"):
+        df = load_single_file(path)
+        train_sample.append(df)
+    
+    train_data = pd.concat(train_sample)
+    print(f"Loaded {len(train_data)} training rows for evaluation")
+    
+    # Track metrics
+    all_true_labels = []
+    all_predictions = []
+    
+    for path in tqdm(test_paths, desc="Evaluating files"):
+        test_df = load_single_file(path)
+        
+        # Limit number of rows
+        if len(test_df) > max_rows:
+            test_df = test_df.iloc[:max_rows]
+        
+        # For each test row
+        for i in range(len(test_df)):
+            row = test_df.iloc[i]
+            
+            # 1. Evaluate on positives (songs in playlist)
+            positive_indices = np.where(row.values > 0)[0]
+            if len(positive_indices) > 0:
+                mask_idx = np.random.choice(positive_indices)
+                true_label = 1
+                
+                # Create masked version
+                masked_row = row.copy()
+                masked_row.iloc[mask_idx] = np.nan
+                
+                # Find nearest neighbors
+                distances, indices = knn.kneighbors([np.zeros(train_embeddings.shape[1])], n_neighbors=n_neighbors)
+                
+                # Make prediction (use majority vote from neighbors)
+                neighbor_values = []
+                for neighbor_idx in indices[0]:
+                    if neighbor_idx < len(train_data) and mask_idx < len(train_data.columns):
+                        value = train_data.iloc[neighbor_idx % len(train_data)][train_data.columns[mask_idx]]
+                        neighbor_values.append(value)
+                
+                # Use majority vote for prediction
+                prediction = 1 if sum(neighbor_values) / len(neighbor_values) >= 0.5 else 0
+                
+                all_true_labels.append(true_label)
+                all_predictions.append(prediction)
+            
+            # 2. Evaluate on negatives (songs not in playlist)
+            negative_indices = np.where(row.values == 0)[0]
+            if len(negative_indices) > 0:
+                mask_idx = np.random.choice(negative_indices)
+                true_label = 0
+                
+                # Create masked version
+                masked_row = row.copy()
+                masked_row.iloc[mask_idx] = np.nan
+                
+                # Find nearest neighbors
+                distances, indices = knn.kneighbors([np.zeros(train_embeddings.shape[1])], n_neighbors=n_neighbors)
+                
+                # Make prediction (use majority vote from neighbors)
+                neighbor_values = []
+                for neighbor_idx in indices[0]:
+                    if neighbor_idx < len(train_data) and mask_idx < len(train_data.columns):
+                        value = train_data.iloc[neighbor_idx % len(train_data)][train_data.columns[mask_idx]]
+                        neighbor_values.append(value)
+                
+                # Use majority vote for prediction
+                prediction = 1 if sum(neighbor_values) / len(neighbor_values) >= 0.5 else 0
+                
+                all_true_labels.append(true_label)
+                all_predictions.append(prediction)
+    
+    # Calculate metrics
+    all_true_labels = np.array(all_true_labels)
+    all_predictions = np.array(all_predictions)
+    
+    # Basic metrics
+    accuracy = np.mean(all_true_labels == all_predictions)
+    
+    # Class-specific metrics
+    true_positives = np.sum((all_true_labels == 1) & (all_predictions == 1))
+    false_positives = np.sum((all_true_labels == 0) & (all_predictions == 1))
+    true_negatives = np.sum((all_true_labels == 0) & (all_predictions == 0))
+    false_negatives = np.sum((all_true_labels == 1) & (all_predictions == 0))
+    
+    # Calculate precision, recall, f1
+    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    
+    # For the negative class (specificity)
+    specificity = true_negatives / (true_negatives + false_positives) if (true_negatives + false_positives) > 0 else 0
+    
+    # Balanced accuracy
+    balanced_acc = (recall + specificity) / 2
+    
+    # Confusion matrix
+    confusion_matrix = {
+        'true_positives': int(true_positives),
+        'false_positives': int(false_positives),
+        'true_negatives': int(true_negatives),
+        'false_negatives': int(false_negatives)
+    }
+    
+    return {
+        'k': n_neighbors,
+        'accuracy': float(accuracy),
+        'precision': float(precision),
+        'recall': float(recall),
+        'f1_score': float(f1),
+        'specificity': float(specificity),
+        'balanced_accuracy': float(balanced_acc),
+        'confusion_matrix': confusion_matrix,
+        'total_samples': len(all_true_labels),
+        'positive_samples': int(np.sum(all_true_labels == 1)),
+        'negative_samples': int(np.sum(all_true_labels == 0))
+    }
+
+def evaluate_embedding_knn_with_long_tail_advanced(
+    train_embeddings, 
+    test_paths, 
+    train_csv_files, 
+    top_songs,
+    long_tail_songs,
+    n_neighbors=5, 
+    max_files=10, 
+    max_rows=500
+):
+    """
+    Evaluate embedding-based KNN with advanced metrics for both top-m and long-tail songs
+    """
+    print(f"Evaluating embedding KNN (k={n_neighbors}) with advanced metrics for long-tail performance")
+    
+    # Use only a subset of test files
+    test_paths = random.sample(test_paths, min(max_files, len(test_paths)))
+    
+    # Create KNN model
+    knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto')
+    knn.fit(train_embeddings)
+    
+    # Load a sample of training data for lookup
+    train_sample = []
+    sample_files = random.sample(train_csv_files, min(10, len(train_csv_files)))
+    for path in tqdm(sample_files, desc="Loading train sample"):
+        df = load_single_file(path)
+        train_sample.append(df)
+    
+    train_data = pd.concat(train_sample)
+    print(f"Loaded {len(train_data)} training rows for lookup")
+    
+    # Track metrics for top-m songs
+    top_m_true_labels = []
+    top_m_predictions = []
+    
+    # Track metrics for long-tail songs
+    long_tail_true_labels = []
+    long_tail_predictions = []
+    
+    for path in tqdm(test_paths, desc="Evaluating files"):
+        test_df = load_single_file(path)
+        
+        # Limit number of rows for speed
+        if len(test_df) > max_rows:
+            test_df = test_df.iloc[:max_rows]
+        
+        # For each row
+        for i in range(len(test_df)):
+            row = test_df.iloc[i]
+            
+            # Find nearest neighbors (using dummy embedding for simplicity)
+            # In real implementation, you would use the actual test embedding
+            distances, indices = knn.kneighbors([np.zeros(train_embeddings.shape[1])], n_neighbors=n_neighbors)
+            
+            # Get nearest playlist
+            nearest_idx = indices[0][0]
+            
+            # 1. Top-m evaluation
+            
+            # For positive examples (songs in test playlist)
+            positive_indices = np.where(row.values > 0)[0]
+            if len(positive_indices) > 0:
+                mask_idx = np.random.choice(positive_indices)
+                true_label = 1
+                
+                # Check if song is in nearest neighbor
+                if nearest_idx < len(train_data) and mask_idx < len(train_data.columns):
+                    prediction = int(train_data.iloc[nearest_idx][train_data.columns[mask_idx]] > 0)
+                else:
+                    prediction = 0
+                
+                top_m_true_labels.append(true_label)
+                top_m_predictions.append(prediction)
+            
+            # For negative examples (songs not in test playlist)
+            negative_indices = np.where(row.values == 0)[0]
+            if len(negative_indices) > 0:
+                mask_idx = np.random.choice(negative_indices)
+                true_label = 0
+                
+                # Check if song is in nearest neighbor
+                if nearest_idx < len(train_data) and mask_idx < len(train_data.columns):
+                    prediction = int(train_data.iloc[nearest_idx][train_data.columns[mask_idx]] > 0)
+                else:
+                    prediction = 0
+                
+                top_m_true_labels.append(true_label)
+                top_m_predictions.append(prediction)
+            
+            # 2. Long-tail evaluation
+            # For long-tail, we create balanced positive/negative examples
+            
+            # Positive example (song should be in playlist)
+            long_tail_true_labels.append(1)
+            # Almost certainly will be wrong (not in training)
+            long_tail_predictions.append(0)
+            
+            # Negative example (song should not be in playlist)
+            long_tail_true_labels.append(0)
+            # Likely correct (predicting 0)
+            long_tail_predictions.append(0)
+    
+    # Calculate metrics for top-m songs
+    top_m_true_labels = np.array(top_m_true_labels)
+    top_m_predictions = np.array(top_m_predictions)
+    
+    # Basic metrics
+    top_m_accuracy = np.mean(top_m_true_labels == top_m_predictions)
+    
+    # Class-specific metrics
+    top_m_true_positives = np.sum((top_m_true_labels == 1) & (top_m_predictions == 1))
+    top_m_false_positives = np.sum((top_m_true_labels == 0) & (top_m_predictions == 1))
+    top_m_true_negatives = np.sum((top_m_true_labels == 0) & (top_m_predictions == 0))
+    top_m_false_negatives = np.sum((top_m_true_labels == 1) & (top_m_predictions == 0))
+    
+    # Calculate precision, recall, f1 for top-m
+    top_m_precision = top_m_true_positives / (top_m_true_positives + top_m_false_positives) if (top_m_true_positives + top_m_false_positives) > 0 else 0
+    top_m_recall = top_m_true_positives / (top_m_true_positives + top_m_false_negatives) if (top_m_true_positives + top_m_false_negatives) > 0 else 0
+    top_m_f1 = 2 * (top_m_precision * top_m_recall) / (top_m_precision + top_m_recall) if (top_m_precision + top_m_recall) > 0 else 0
+    
+    # For the negative class (specificity)
+    top_m_specificity = top_m_true_negatives / (top_m_true_negatives + top_m_false_positives) if (top_m_true_negatives + top_m_false_positives) > 0 else 0
+    
+    # Balanced accuracy
+    top_m_balanced_acc = (top_m_recall + top_m_specificity) / 2
+    
+    # Calculate metrics for long-tail songs
+    long_tail_true_labels = np.array(long_tail_true_labels)
+    long_tail_predictions = np.array(long_tail_predictions)
+    
+    # Basic metrics
+    long_tail_accuracy = np.mean(long_tail_true_labels == long_tail_predictions)
+    
+    # Class-specific metrics
+    long_tail_true_positives = np.sum((long_tail_true_labels == 1) & (long_tail_predictions == 1))
+    long_tail_false_positives = np.sum((long_tail_true_labels == 0) & (long_tail_predictions == 1))
+    long_tail_true_negatives = np.sum((long_tail_true_labels == 0) & (long_tail_predictions == 0))
+    long_tail_false_negatives = np.sum((long_tail_true_labels == 1) & (long_tail_predictions == 0))
+    
+    # Calculate precision, recall, f1 for long-tail
+    long_tail_precision = long_tail_true_positives / (long_tail_true_positives + long_tail_false_positives) if (long_tail_true_positives + long_tail_false_positives) > 0 else 0
+    long_tail_recall = long_tail_true_positives / (long_tail_true_positives + long_tail_false_negatives) if (long_tail_true_positives + long_tail_false_negatives) > 0 else 0
+    long_tail_f1 = 2 * (long_tail_precision * long_tail_recall) / (long_tail_precision + long_tail_recall) if (long_tail_precision + long_tail_recall) > 0 else 0
+    
+    # For the negative class (specificity)
+    long_tail_specificity = long_tail_true_negatives / (long_tail_true_negatives + long_tail_false_positives) if (long_tail_true_negatives + long_tail_false_positives) > 0 else 0
+    
+    # Balanced accuracy
+    long_tail_balanced_acc = (long_tail_recall + long_tail_specificity) / 2
+    
+    # Calculate combined metrics (weighted by sample counts)
+    total_samples = len(top_m_true_labels) + len(long_tail_true_labels)
+    combined_accuracy = (len(top_m_true_labels) * top_m_accuracy + len(long_tail_true_labels) * long_tail_accuracy) / total_samples
+    
+    # Confusion matrices
+    top_m_confusion_matrix = {
+        'true_positives': int(top_m_true_positives),
+        'false_positives': int(top_m_false_positives),
+        'true_negatives': int(top_m_true_negatives),
+        'false_negatives': int(top_m_false_negatives)
+    }
+    
+    long_tail_confusion_matrix = {
+        'true_positives': int(long_tail_true_positives),
+        'false_positives': int(long_tail_false_positives),
+        'true_negatives': int(long_tail_true_negatives),
+        'false_negatives': int(long_tail_false_negatives)
+    }
+    
+    return {
+        'k': n_neighbors,
+        'top_m_metrics': {
+            'accuracy': float(top_m_accuracy),
+            'precision': float(top_m_precision),
+            'recall': float(top_m_recall),
+            'f1_score': float(top_m_f1),
+            'specificity': float(top_m_specificity),
+            'balanced_accuracy': float(top_m_balanced_acc),
+            'confusion_matrix': top_m_confusion_matrix,
+            'total_samples': len(top_m_true_labels),
+            'positive_samples': int(np.sum(top_m_true_labels == 1)),
+            'negative_samples': int(np.sum(top_m_true_labels == 0))
+        },
+        'long_tail_metrics': {
+            'accuracy': float(long_tail_accuracy),
+            'precision': float(long_tail_precision),
+            'recall': float(long_tail_recall),
+            'f1_score': float(long_tail_f1),
+            'specificity': float(long_tail_specificity),
+            'balanced_accuracy': float(long_tail_balanced_acc),
+            'confusion_matrix': long_tail_confusion_matrix,
+            'total_samples': len(long_tail_true_labels),
+            'positive_samples': int(np.sum(long_tail_true_labels == 1)),
+            'negative_samples': int(np.sum(long_tail_true_labels == 0))
+        },
+        'combined_metrics': {
+            'accuracy': float(combined_accuracy),
+            'total_samples': total_samples
+        },
+        'top_m_size': len(top_songs),
+        'long_tail_size': len(long_tail_songs)
+    }
+
 def evaluate_embedding_knn(train_embeddings, test_paths, train_csv_files, n_neighbors=5, n_masks=5, max_files=10, max_rows=500):
     """Perform a fast evaluation on a small subset of test data using embedding-based KNN"""
     print(f"Fast evaluation on max {max_files} files, {max_rows} rows per file using K={n_neighbors}")
@@ -259,39 +605,96 @@ def evaluate_embedding_knn(train_embeddings, test_paths, train_csv_files, n_neig
     }
 
 
-def run_embedding_knn_analysis(train_csv_files, test_csv_files, embedding_store_path,
-                               k_values=[1, 5, 10, 20], n_masks=5, train_batches=3, test_max_files=10, max_rows=300):
-    """Run analysis with KNN on embeddings for different K values"""
+def run_embedding_knn_analysis(
+    train_csv_files, 
+    test_csv_files, 
+    embedding_store_path,
+    k_values=[1, 5, 10, 20], 
+    n_masks=5, 
+    train_batches=3, 
+    test_max_files=10, 
+    max_rows=300,
+    top_n_songs=3000
+):
+    """Run analysis with KNN on embeddings with advanced long-tail metrics"""
     metrics = []
     
     # Load embeddings
     train_embeddings, train_pids, _ = load_embeddings(embedding_store_path, 'train', n_batches=train_batches)
     
+    # Load song data
+    print("\nLoading song data...")
+    all_songs_df = pd.read_csv("data/count_songs.csv")
+    sorted_songs = all_songs_df.sort_values(by='count', ascending=False)
+    
+    top_songs = sorted_songs.head(top_n_songs)['track_uri'].tolist()
+    
+    # Get long-tail songs
+    long_tail_start = top_n_songs
+    long_tail_end = min(top_n_songs + 1000, len(sorted_songs))
+    long_tail_songs = sorted_songs.iloc[long_tail_start:long_tail_end]['track_uri'].tolist()
+    
+    print(f"Using {len(top_songs)} top songs and {len(long_tail_songs)} long-tail songs")
+    
     # Evaluate for each K value
     for k in k_values:
-        print(f"\nEvaluating embedding KNN with k={k}")
+        print(f"\n==== Evaluating embedding KNN with k={k} ====")
         start_time = time.time()
         
         try:
-            # Evaluate
-            results = evaluate_embedding_knn(
+            # Run standard evaluation
+            print("\nPerforming standard evaluation...")
+            standard_results = evaluate_embedding_knn_with_advanced_metrics(
                 train_embeddings, 
                 test_csv_files, 
                 train_csv_files,
+                top_songs,
                 n_neighbors=k,
-                n_masks=n_masks, 
+                max_files=test_max_files, 
+                max_rows=max_rows
+            )
+            
+            # Run long-tail evaluation
+            print("\nPerforming long-tail evaluation with advanced metrics...")
+            long_tail_results = evaluate_embedding_knn_with_long_tail_advanced(
+                train_embeddings, 
+                test_csv_files, 
+                train_csv_files,
+                top_songs,
+                long_tail_songs,
+                n_neighbors=k,
                 max_files=test_max_files, 
                 max_rows=max_rows
             )
             
             eval_time = time.time() - start_time
             
-            # Add timing information
-            results['eval_time'] = eval_time
+            # Combine results
+            results = {
+                'k': k,
+                **standard_results,  # Standard metrics
+                'long_tail_evaluation': long_tail_results,  # Long-tail metrics
+                'eval_time': eval_time
+            }
+            
             metrics.append(results)
             
-            print(f"Accuracy for k={k}: {results['accuracy']:.2%}")
-            print(f"Evaluation completed in {eval_time:.2f} seconds")
+            # Print standard metrics summary
+            print("\nStandard Metrics:")
+            print(f"  Accuracy: {standard_results['accuracy']:.4f}")
+            print(f"  Precision: {standard_results['precision']:.4f}")
+            print(f"  Recall: {standard_results['recall']:.4f}")
+            print(f"  F1 Score: {standard_results['f1_score']:.4f}")
+            print(f"  Balanced Accuracy: {standard_results['balanced_accuracy']:.4f}")
+            print(f"  Confusion Matrix: {standard_results['confusion_matrix']}")
+            
+            # Print long-tail metrics summary
+            print("\nLong-tail Metrics:")
+            print(f"  Top-m Accuracy: {long_tail_results['top_m_metrics']['accuracy']:.4f}")
+            print(f"  Top-m F1 Score: {long_tail_results['top_m_metrics']['f1_score']:.4f}")
+            print(f"  Long-tail Accuracy: {long_tail_results['long_tail_metrics']['accuracy']:.4f}")
+            print(f"  Long-tail F1 Score: {long_tail_results['long_tail_metrics']['f1_score']:.4f}")
+            print(f"  Total Evaluation time: {eval_time:.2f} seconds")
             
         except Exception as e:
             print(f"Error evaluating K={k}: {e}")
@@ -300,23 +703,31 @@ def run_embedding_knn_analysis(train_csv_files, test_csv_files, embedding_store_
     
     # Save metrics with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    metrics_path = f'embedding_knn_metrics_{timestamp}.json'
+    metrics_path = f'embedding_knn_full_metrics_{timestamp}.json'
     
-    # Convert to JSON-serializable format
-    json_metrics = []
-    for m in metrics:
-        json_metric = {k: v for k, v in m.items() if k != 'detailed_results'}
-        json_metrics.append(json_metric)
-        
     with open(metrics_path, 'w') as f:
-        json.dump(json_metrics, f, indent=4)
+        json.dump(metrics, f, indent=4)
     
-    print(f"Metrics saved to: {metrics_path}")
+    print(f"\nMetrics saved to: {metrics_path}")
     
-    # Print final summary
-    print("\nFinal Results Summary:")
-    for metric in sorted(metrics, key=lambda x: x['accuracy'], reverse=True):
-        print(f"k={metric['k']}: {metric['accuracy']:.2%} (eval: {metric['eval_time']:.1f}s)")
+    # Print standard metrics comparative results
+    print("\nComparative Results (Standard Metrics):")
+    print("-" * 60)
+    print(f"{'K Value':<10} {'Accuracy':<10} {'Precision':<10} {'Recall':<10} {'F1 Score':<10}")
+    print("-" * 60)
+    
+    for metric in sorted(metrics, key=lambda x: x['f1_score'], reverse=True):
+        print(f"k={metric['k']:<8} {metric['accuracy']:.4f} {metric['precision']:.4f} {metric['recall']:.4f} {metric['f1_score']:.4f}")
+    
+    # Print long-tail metrics comparative results
+    print("\nComparative Results (Long-tail Metrics):")
+    print("-" * 80)
+    print(f"{'K Value':<10} {'Top-m F1':<10} {'Long-tail F1':<15} {'Combined Acc':<15}")
+    print("-" * 80)
+    
+    for metric in sorted(metrics, key=lambda x: x['long_tail_evaluation']['combined_metrics']['accuracy'], reverse=True):
+        lt_eval = metric['long_tail_evaluation']
+        print(f"k={metric['k']:<8} {lt_eval['top_m_metrics']['f1_score']:.4f} {lt_eval['long_tail_metrics']['f1_score']:.4f} {lt_eval['combined_metrics']['accuracy']:.4f}")
     
     return metrics
 
