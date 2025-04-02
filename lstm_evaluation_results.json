@@ -1,0 +1,77 @@
+{
+  "model_path": "models/lstm_playlist_model.pt",
+  "masking_evaluation": {
+    "top_metrics": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "specificity": 1.0,
+      "confusion_matrix": {
+        "true_positives": 11757,
+        "false_positives": 0,
+        "true_negatives": 11757,
+        "false_negatives": 0
+      },
+      "sample_count": 23514,
+      "similarity_stats": {
+        "mean": 0.5698491899460432,
+        "median": 0.4255661832613066,
+        "min": 1.5269722878796798e-06,
+        "max": 0.9983866810798645
+      }
+    },
+    "long_metrics": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "specificity": 1.0,
+      "confusion_matrix": {
+        "true_positives": 991,
+        "false_positives": 0,
+        "true_negatives": 991,
+        "false_negatives": 0
+      },
+      "sample_count": 1982,
+      "similarity_stats": {
+        "mean": 0.5735015239702221,
+        "median": 0.6289893724916851,
+        "min": 0.0001931020257575411,
+        "max": 0.9982916116714478
+      }
+    },
+    "combined_metrics": {
+      "accuracy": 1.0,
+      "total_samples": 25496
+    },
+    "processing_stats": {
+      "items_processed": 12748,
+      "errors": 2515,
+      "empty_batches": 0
+    }
+  },
+  "topk_evaluation": {
+    "accuracies": {
+      "1": 0.2113022113022113,
+      "5": 0.2659493349148522,
+      "10": 0.10615945098703719
+    },
+    "correct": {
+      "1": 2494,
+      "5": 3139,
+      "10": 1253
+    },
+    "total": 11803,
+    "errors": 454
+  },
+  "embedding_coverage": {
+    "top_songs": 0.768,
+    "long_tail_songs": 0.474
+  },
+  "evaluation_time": 470.755432844162,
+  "model_info": {
+    "hidden_dim": 1536,
+    "num_layers": 2
+  }
+}

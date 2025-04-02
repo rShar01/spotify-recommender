@@ -1,0 +1,73 @@
+{
+  "model_path": "models/lstm_playlist_model.pt",
+  "balanced_evaluation": {
+    "top_metrics": {
+      "accuracy": 0.513276038994356,
+      "precision": 0.5084844559585492,
+      "recall": 1.0,
+      "f1_score": 0.6741659868618779,
+      "confusion_matrix": {
+        "true_positives": 15702,
+        "false_positives": 15178,
+        "true_negatives": 304,
+        "false_negatives": 0
+      },
+      "sample_count": 31184,
+      "similarity_stats": {
+        "mean": 0.9806117224407184,
+        "median": 0.9908826053142548,
+        "min": 0.004228436784362599,
+        "max": 0.9984590411186218
+      }
+    },
+    "long_metrics": {
+      "accuracy": 0.8227068025598483,
+      "precision": 0.7409075164530655,
+      "recall": 1.0,
+      "f1_score": 0.8511738957421409,
+      "confusion_matrix": {
+        "true_positives": 2139,
+        "false_positives": 748,
+        "true_negatives": 1332,
+        "false_negatives": 0
+      },
+      "sample_count": 4219,
+      "similarity_stats": {
+        "mean": 0.7245088688440674,
+        "median": 0.9862577319145203,
+        "min": 9.994188740098941e-05,
+        "max": 0.9980401992797852
+      }
+    },
+    "processing_stats": {
+      "processed": 17562,
+      "errors": 3979,
+      "empty_batches": 0
+    }
+  },
+  "topk_evaluation": {
+    "accuracies": {
+      "1": 0.17581448106370912,
+      "5": 0.4391396120213087,
+      "10": 0.5286008230452675,
+      "20": 0.6353413654618474
+    },
+    "correct": {
+      "1": 2790,
+      "5": 4369,
+      "10": 2569,
+      "20": 791
+    },
+    "total": 15869,
+    "errors": 467
+  },
+  "embedding_coverage": {
+    "top_songs": 0.768,
+    "long_tail_songs": 0.474
+  },
+  "evaluation_time": 906.2142314910889,
+  "model_info": {
+    "hidden_dim": 1536,
+    "num_layers": 2
+  }
+}

@@ -1,0 +1,374 @@
+[
+    {
+        "k": 1,
+        "accuracy": 0.5710267229254571,
+        "precision": 0.984375,
+        "recall": 0.09375,
+        "f1_score": 0.17119565217391305,
+        "specificity": 0.9986666666666667,
+        "balanced_accuracy": 0.5462083333333334,
+        "confusion_matrix": {
+            "true_positives": 63,
+            "false_positives": 1,
+            "true_negatives": 749,
+            "false_negatives": 609
+        },
+        "total_samples": 1422,
+        "positive_samples": 672,
+        "negative_samples": 750,
+        "long_tail_evaluation": {
+            "top_m_metrics": {
+                "accuracy": 0.5673959068454482,
+                "precision": 0.9655172413793104,
+                "recall": 0.08395802098950525,
+                "f1_score": 0.15448275862068966,
+                "specificity": 0.9973333333333333,
+                "balanced_accuracy": 0.5406456771614193,
+                "confusion_matrix": {
+                    "true_positives": 56,
+                    "false_positives": 2,
+                    "true_negatives": 748,
+                    "false_negatives": 611
+                },
+                "total_samples": 1417,
+                "positive_samples": 667,
+                "negative_samples": 750
+            },
+            "long_tail_metrics": {
+                "accuracy": 0.5,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.5,
+                "confusion_matrix": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 750
+                },
+                "total_samples": 1500,
+                "positive_samples": 750,
+                "negative_samples": 750
+            },
+            "combined_metrics": {
+                "accuracy": 0.5327391155296538,
+                "total_samples": 2917
+            },
+            "top_m_size": 3000,
+            "long_tail_size": 1000
+        },
+        "fit_time": 30.922634840011597,
+        "eval_time": 5104.163415193558
+    },
+    {
+        "k": 3,
+        "accuracy": 0.5557924662402275,
+        "precision": 1.0,
+        "recall": 0.0487062404870624,
+        "f1_score": 0.09288824383164006,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5243531202435312,
+        "confusion_matrix": {
+            "true_positives": 32,
+            "false_positives": 0,
+            "true_negatives": 750,
+            "false_negatives": 625
+        },
+        "total_samples": 1407,
+        "positive_samples": 657,
+        "negative_samples": 750,
+        "long_tail_evaluation": {
+            "top_m_metrics": {
+                "accuracy": 0.5483870967741935,
+                "precision": 0.9705882352941176,
+                "recall": 0.04881656804733728,
+                "f1_score": 0.09295774647887324,
+                "specificity": 0.9986666666666667,
+                "balanced_accuracy": 0.523741617357002,
+                "confusion_matrix": {
+                    "true_positives": 33,
+                    "false_positives": 1,
+                    "true_negatives": 749,
+                    "false_negatives": 643
+                },
+                "total_samples": 1426,
+                "positive_samples": 676,
+                "negative_samples": 750
+            },
+            "long_tail_metrics": {
+                "accuracy": 0.5,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.5,
+                "confusion_matrix": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 750
+                },
+                "total_samples": 1500,
+                "positive_samples": 750,
+                "negative_samples": 750
+            },
+            "combined_metrics": {
+                "accuracy": 0.5235816814764184,
+                "total_samples": 2926
+            },
+            "top_m_size": 3000,
+            "long_tail_size": 1000
+        },
+        "fit_time": 8.421468019485474,
+        "eval_time": 5086.656535625458
+    },
+    {
+        "k": 5,
+        "accuracy": 0.5431154381084841,
+        "precision": 1.0,
+        "recall": 0.04505813953488372,
+        "f1_score": 0.08623087621696801,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5225290697674418,
+        "confusion_matrix": {
+            "true_positives": 31,
+            "false_positives": 0,
+            "true_negatives": 750,
+            "false_negatives": 657
+        },
+        "total_samples": 1438,
+        "positive_samples": 688,
+        "negative_samples": 750,
+        "long_tail_evaluation": {
+            "top_m_metrics": {
+                "accuracy": 0.5423728813559322,
+                "precision": 0.95,
+                "recall": 0.028528528528528527,
+                "f1_score": 0.05539358600583091,
+                "specificity": 0.9986666666666667,
+                "balanced_accuracy": 0.5135975975975976,
+                "confusion_matrix": {
+                    "true_positives": 19,
+                    "false_positives": 1,
+                    "true_negatives": 749,
+                    "false_negatives": 647
+                },
+                "total_samples": 1416,
+                "positive_samples": 666,
+                "negative_samples": 750
+            },
+            "long_tail_metrics": {
+                "accuracy": 0.5,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.5,
+                "confusion_matrix": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 750
+                },
+                "total_samples": 1500,
+                "positive_samples": 750,
+                "negative_samples": 750
+            },
+            "combined_metrics": {
+                "accuracy": 0.5205761316872428,
+                "total_samples": 2916
+            },
+            "top_m_size": 3000,
+            "long_tail_size": 1000
+        },
+        "fit_time": 8.63383960723877,
+        "eval_time": 5132.171959638596
+    },
+    {
+        "k": 10,
+        "accuracy": 0.5496783416726233,
+        "precision": 1.0,
+        "recall": 0.029275808936825885,
+        "f1_score": 0.05688622754491018,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.514637904468413,
+        "confusion_matrix": {
+            "true_positives": 19,
+            "false_positives": 0,
+            "true_negatives": 750,
+            "false_negatives": 630
+        },
+        "total_samples": 1399,
+        "positive_samples": 649,
+        "negative_samples": 750,
+        "long_tail_evaluation": {
+            "top_m_metrics": {
+                "accuracy": 0.5362622036262203,
+                "precision": 1.0,
+                "recall": 0.027777777777777776,
+                "f1_score": 0.05405405405405406,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.5138888888888888,
+                "confusion_matrix": {
+                    "true_positives": 19,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 665
+                },
+                "total_samples": 1434,
+                "positive_samples": 684,
+                "negative_samples": 750
+            },
+            "long_tail_metrics": {
+                "accuracy": 0.5,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.5,
+                "confusion_matrix": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 750
+                },
+                "total_samples": 1500,
+                "positive_samples": 750,
+                "negative_samples": 750
+            },
+            "combined_metrics": {
+                "accuracy": 0.5177232447171097,
+                "total_samples": 2934
+            },
+            "top_m_size": 3000,
+            "long_tail_size": 1000
+        },
+        "fit_time": 8.44537091255188,
+        "eval_time": 5144.211464166641
+    },
+    {
+        "k": 25,
+        "accuracy": 0.5357142857142857,
+        "precision": 1.0,
+        "recall": 0.022123893805309734,
+        "f1_score": 0.043290043290043295,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5110619469026548,
+        "confusion_matrix": {
+            "true_positives": 15,
+            "false_positives": 0,
+            "true_negatives": 750,
+            "false_negatives": 663
+        },
+        "total_samples": 1428,
+        "positive_samples": 678,
+        "negative_samples": 750,
+        "long_tail_evaluation": {
+            "top_m_metrics": {
+                "accuracy": 0.5375438596491228,
+                "precision": 0.9444444444444444,
+                "recall": 0.025185185185185185,
+                "f1_score": 0.049062049062049064,
+                "specificity": 0.9986666666666667,
+                "balanced_accuracy": 0.5119259259259259,
+                "confusion_matrix": {
+                    "true_positives": 17,
+                    "false_positives": 1,
+                    "true_negatives": 749,
+                    "false_negatives": 658
+                },
+                "total_samples": 1425,
+                "positive_samples": 675,
+                "negative_samples": 750
+            },
+            "long_tail_metrics": {
+                "accuracy": 0.5,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.5,
+                "confusion_matrix": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 750
+                },
+                "total_samples": 1500,
+                "positive_samples": 750,
+                "negative_samples": 750
+            },
+            "combined_metrics": {
+                "accuracy": 0.5182905982905983,
+                "total_samples": 2925
+            },
+            "top_m_size": 3000,
+            "long_tail_size": 1000
+        },
+        "fit_time": 30.821213722229004,
+        "eval_time": 5392.738341808319
+    },
+    {
+        "k": 100,
+        "accuracy": 0.5332390381895332,
+        "precision": 1.0,
+        "recall": 0.006024096385542169,
+        "f1_score": 0.011976047904191616,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5030120481927711,
+        "confusion_matrix": {
+            "true_positives": 4,
+            "false_positives": 0,
+            "true_negatives": 750,
+            "false_negatives": 660
+        },
+        "total_samples": 1414,
+        "positive_samples": 664,
+        "negative_samples": 750,
+        "long_tail_evaluation": {
+            "top_m_metrics": {
+                "accuracy": 0.52945301542777,
+                "precision": 1.0,
+                "recall": 0.0073964497041420114,
+                "f1_score": 0.014684287812041114,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.503698224852071,
+                "confusion_matrix": {
+                    "true_positives": 5,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 671
+                },
+                "total_samples": 1426,
+                "positive_samples": 676,
+                "negative_samples": 750
+            },
+            "long_tail_metrics": {
+                "accuracy": 0.5,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1_score": 0.0,
+                "specificity": 1.0,
+                "balanced_accuracy": 0.5,
+                "confusion_matrix": {
+                    "true_positives": 0,
+                    "false_positives": 0,
+                    "true_negatives": 750,
+                    "false_negatives": 750
+                },
+                "total_samples": 1500,
+                "positive_samples": 750,
+                "negative_samples": 750
+            },
+            "combined_metrics": {
+                "accuracy": 0.5143540669856459,
+                "total_samples": 2926
+            },
+            "top_m_size": 3000,
+            "long_tail_size": 1000
+        },
+        "fit_time": 25.596943378448486,
+        "eval_time": 5410.111934900284
+    }
+]
