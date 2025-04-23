@@ -1,0 +1,94 @@
+{
+  "model_path": "models/lstm_playlist_model.pt",
+  "noise_config": {
+    "type": "gaussian",
+    "level": 0.1,
+    "dims": "all",
+    "stats": {
+      "noise_type": "gaussian",
+      "noise_level": 0.1,
+      "total_embeddings": 2132429,
+      "avg_noise_magnitude": 61.27773895116438
+    }
+  },
+  "dynamic_evaluation": {
+    "top_metrics": {
+      "accuracy": 0.3347776866924308,
+      "precision": 0.3337374843554443,
+      "recall": 0.9992973416090877,
+      "f1_score": 0.500366493681649,
+      "confusion_matrix": {
+        "true_positives": 17066,
+        "false_positives": 34070,
+        "true_negatives": 86,
+        "false_negatives": 12
+      },
+      "sample_count": 51234,
+      "similarity_stats": {
+        "mean": 0.98629477723084,
+        "median": 0.9881095886230469,
+        "min": 0.5451282858848572,
+        "max": 0.9960120916366577
+      },
+      "threshold": 0.927833616733551
+    },
+    "long_metrics": {
+      "accuracy": 0.3356153963182717,
+      "precision": 0.33409576090271426,
+      "recall": 1.0,
+      "f1_score": 0.5008572408275231,
+      "confusion_matrix": {
+        "true_positives": 2191,
+        "false_positives": 4367,
+        "true_negatives": 15,
+        "false_negatives": 0
+      },
+      "sample_count": 6573,
+      "similarity_stats": {
+        "mean": 0.9858423887858122,
+        "median": 0.9877107739448547,
+        "min": 0.9047510623931885,
+        "max": 0.9954046010971069
+      },
+      "threshold": 0.95
+    },
+    "processing_stats": {
+      "processed": 13824,
+      "errors": 8261,
+      "empty_batches": 0
+    },
+    "thresholds": {
+      "top": 0.927833616733551,
+      "long": 0.95
+    }
+  },
+  "topk_evaluation": {
+    "accuracies": {
+      "1": 0.1889649570666048,
+      "5": 0.415622267560478,
+      "10": 0.5008895038545167,
+      "20": 0.5707692307692308
+    },
+    "correct": {
+      "1": 3257,
+      "5": 4278,
+      "10": 2534,
+      "20": 742
+    },
+    "total": 17236,
+    "errors": 682
+  },
+  "embedding_coverage": {
+    "top_songs": 0.768,
+    "long_tail_songs": 0.474
+  },
+  "evaluation_time": 1727.5357112884521,
+  "model_info": {
+    "hidden_dim": 1536,
+    "num_layers": 2
+  },
+  "dataset_info": {
+    "size": 17929,
+    "min_songs": 2
+  }
+}
