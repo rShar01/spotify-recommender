@@ -83,6 +83,42 @@ Options:
 - `--k-values`: k values to include in plots
 - `--output-dir`: Directory to save plots
 
+### 5. Playlist Loader (`playlist_loader.py`)
+
+Utility for loading and processing playlist data from multiple JSON files.
+
+```bash
+python playlist_loader.py --data-dir DATA_DIR --output-dir OUTPUT_DIR [OPTIONS]
+```
+
+Options:
+- `--num-files`: Number of files to load (None = all)
+- `--min-tracks`: Minimum number of tracks per playlist
+- `--max-tracks`: Maximum number of tracks per playlist
+- `--min-unique-tracks`: Minimum number of unique tracks per playlist
+- `--train-ratio`: Ratio of training data
+- `--val-ratio`: Ratio of validation data
+- `--test-ratio`: Ratio of test data
+- `--random-seed`: Random seed for reproducibility
+
+### 6. Complete Workflow (`run_order_perturbation_workflow.py`)
+
+Runs the entire order perturbation workflow, from data preparation to model training and evaluation.
+
+```bash
+python run_order_perturbation_workflow.py --playlist-data-dir PLAYLIST_DATA_DIR --song-data SONG_DATA_PATH --output-dir OUTPUT_DIR [OPTIONS]
+```
+
+Options:
+- `--num-playlist-files`: Number of playlist files to use
+- `--skip-regular`: Skip training regular LSTM model
+- `--skip-robust`: Skip training order-robust LSTM model
+- `--skip-eval`: Skip model evaluation
+- `--skip-compare`: Skip model comparison
+- `--num-epochs`: Number of epochs for training
+- `--perturbation-prob`: Probability of applying perturbation during training
+- `--device`: Device to use for training/evaluation
+
 ## Example Usage
 
 ### Evaluate a model with different order perturbations
@@ -111,6 +147,22 @@ python run_order_eval.py --model models/lstm_model.pt --playlists data/test_play
 
 ```bash
 python compare_models.py --results-dir eval_results --model-names regular_lstm order_robust_lstm --output-dir comparison_plots
+```
+
+### Process playlist data from multiple files
+
+```bash
+python playlist_loader.py --data-dir /data/user_data/rshar/downloads/spotify/data/ --output-dir data/ --num-files 10 --min-tracks 5 --max-tracks 50
+```
+
+### Run the complete workflow
+
+```bash
+# Run the complete workflow with default settings
+python run_order_perturbation_workflow.py --playlist-data-dir /data/user_data/rshar/downloads/spotify/data/ --song-data data/song_lookup.h5 --output-dir order_perturbation_results/ --num-playlist-files 10
+
+# Skip training and just evaluate existing models
+python run_order_perturbation_workflow.py --playlist-data-dir /data/user_data/rshar/downloads/spotify/data/ --song-data data/song_lookup.h5 --output-dir order_perturbation_results/ --skip-regular --skip-robust
 ```
 
 ## Implementation Details
